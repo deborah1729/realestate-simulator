@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 
 const fmt = (n) => {
@@ -161,7 +160,7 @@ export default function App() {
   const maxCum = Math.max(...calc.cfProjection.map(d => Math.abs(d.cum)), 1);
 
   return (
-    <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif", maxWidth: 780, margin: "0 auto", padding: 16, background: "#fafafa", minHeight: "100vh" }}>
+    <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif", maxWidth: "100%", margin: "0 auto", padding: "16px 24px", background: "#fafafa", minHeight: "100vh" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
         <span style={{ fontSize: 28 }}>🏢</span>
         <div>
