@@ -1,3 +1,4 @@
+
 import { useState, useMemo } from "react";
 
 const fmt = (n) => {
@@ -9,16 +10,13 @@ const pct = (n) => n.toFixed(2) + "%";
 
 function Slider({ label, value, onChange, min, max, step = 1, unit = "", color = "#7c3aed" }) {
   return (
-    <div style={{ marginBottom: 14 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-        <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>{label}</span>
-        <span style={{ fontSize: 13, fontWeight: 800, color }}>{typeof value === "number" && value % 1 !== 0 ? value.toFixed(1) : value}{unit}</span>
+    <div style={{ marginBottom: 8 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: "#374151" }}>{label}</span>
+        <span style={{ fontSize: 12, fontWeight: 800, color }}>{typeof value === "number" && value % 1 !== 0 ? value.toFixed(1) : value}{unit}</span>
       </div>
       <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(Number(e.target.value))}
-        style={{ width: "100%", accentColor: color, height: 6 }} />
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "#9ca3af" }}>
-        <span>{min}{unit}</span><span>{max}{unit}</span>
-      </div>
+        style={{ width: "100%", accentColor: color, height: 5 }} />
     </div>
   );
 }
@@ -160,7 +158,7 @@ export default function App() {
   const maxCum = Math.max(...calc.cfProjection.map(d => Math.abs(d.cum)), 1);
 
   return (
-    <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif", maxWidth: "100%", margin: "0 auto", padding: "16px 24px", background: "#fafafa", minHeight: "100vh" }}>
+    <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif", maxWidth: 1200, margin: "0 auto", padding: "12px 20px", background: "#fafafa", minHeight: "100vh" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
         <span style={{ fontSize: 28 }}>🏢</span>
         <div>
@@ -193,20 +191,20 @@ export default function App() {
 
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         <div style={{ flex: "0 0 240px", minWidth: 220 }}>
-          <div style={{ background: "#fff", borderRadius: 12, padding: 14, border: "1px solid #e5e7eb", marginBottom: 10 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#7c3aed", marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>物件</div>
+          <div style={{ background: "#fff", borderRadius: 10, padding: "8px 12px", border: "1px solid #e5e7eb", marginBottom: 6 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "#7c3aed", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>物件</div>
             <Slider label="物件価格" value={price} onChange={setPrice} min={1000} max={100000} step={500} unit="万" color="#3b82f6" />
             <Slider label="月額家賃収入" value={rent} onChange={setRent} min={5} max={500} step={1} unit="万" color="#10b981" />
             <Slider label="空室率" value={vacancy} onChange={setVacancy} min={0} max={30} step={1} unit="%" color="#ef4444" />
           </div>
-          <div style={{ background: "#fff", borderRadius: 12, padding: 14, border: "1px solid #e5e7eb", marginBottom: 10 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#3b82f6", marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>融資</div>
+          <div style={{ background: "#fff", borderRadius: 10, padding: "8px 12px", border: "1px solid #e5e7eb", marginBottom: 6 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "#3b82f6", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>融資</div>
             <Slider label="融資比率(LTV)" value={loanRatio} onChange={setLoanRatio} min={0} max={100} step={5} unit="%" color="#3b82f6" />
             <Slider label="金利" value={rate} onChange={setRate} min={0} max={5} step={0.1} unit="%" color="#f59e0b" />
             <Slider label="返済期間" value={years} onChange={setYears} min={1} max={35} step={1} unit="年" color="#8b5cf6" />
           </div>
-          <div style={{ background: "#fff", borderRadius: 12, padding: 14, border: "1px solid #e5e7eb" }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#059669", marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>経費率</div>
+          <div style={{ background: "#fff", borderRadius: 10, padding: "8px 12px", border: "1px solid #e5e7eb" }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "#059669", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>経費率</div>
             <Slider label="管理費" value={manageFee} onChange={setManageFee} min={0} max={15} step={0.5} unit="%" color="#f97316" />
             <Slider label="修繕積立金" value={repairFund} onChange={setRepairFund} min={0} max={10} step={0.5} unit="%" color="#fb923c" />
             <Slider label="固定資産税等" value={taxRate} onChange={setTaxRate} min={0} max={15} step={0.5} unit="%" color="#e11d48" />
