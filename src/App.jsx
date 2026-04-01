@@ -28,80 +28,92 @@ function MetricCard({ label, value, sub, color, big }) {
 
 function SankeyDiagram({ data }) {
   const { income, vacancyLoss, effectiveIncome, loanPayment, manageFee, repairFund, tax, insurance, otherExp, netCF } = data;
-  const totalExp = manageFee + repairFund + tax + insurance + otherExp;
-  const noi = effectiveIncome - totalExp;
-  const W = 760, H = 380;
-  const colX = [30, 210, 410, 600];
-  const nodeW = 140, gap = 8;
+  const opex = manageFee + repairFund + tax + insurance + otherExp;
+  const noi = effectiveIncome - opex;
 
-  const total = income || 1;
-  const barH = (v) => Math.max(Math.abs(v) / total * 280, 14);
+  const W = 720, PAD = 20;
+  const nodeW = 120, gapX = 50;
+  const cols = [PAD, PAD + nodeW + gapX, PAD + (nodeW + gapX) * 2, PAD + (nodeW + gapX) * 3];
+  const totalH = 320;
+  const gapY = 6;
+  const ref = income || 1;
+  const s = (v) => Math.max((Math.abs(v) / ref) * (totalH - gapY * 3), 16);
 
-  // Column 0: 満室賃料
-  const c0y = 30;
-  const c0h = barH(income);
+  const c0h = s(income);
+  const c0y = PAD;
 
-  // Column 1: 空室ロス + 有効収入
-  const c1_vacancy_h = barH(vacancyLoss);
-  const c1_effective_h = barH(effectiveIncome);
-  const c1_vacancy_y = c0y;
-  const c1_effective_y = c1_vacancy_y + c1_vacancy_h + gap;
+  const vH = s(vacancyLoss);
+  const eH = s(effectiveIncome);
+  const c1vy = c0y;
+  const c1ey = c1vy + vH + gapY;
 
-  // Column 2: 運営経費 + NOI
-  const c2_exp_h = barH(totalExp);
-  const c2_noi_h = barH(Math.max(noi, 0));
-  const c2_exp_y = c1_effective_y;
-  const c2_noi_y = c2_exp_y + c2_exp_h + gap;
+  const oxH = s(opex);
+  const noiH = s(Math.max(noi, 0));
+  const c2oxy = c1ey;
+  const c2noiy = c2oxy + oxH + gapY;
 
-  // Column 3: ローン返済 + 手残り
-  const c3_loan_h = barH(loanPayment);
-  const c3_cf_h = barH(Math.abs(netCF));
-  const c3_loan_y = c2_noi_y;
-  const c3_cf_y = c3_loan_y + c3_loan_h + gap;
+  const lnH = s(loanPayment);
+  const cfAbs = Math.abs(netCF);
+  const cfH = Math.max(s(cfAbs), 20);
+  const c3lny = c2noiy;
+  const c3cfy = c3lny + lnH + gapY;
 
-  const flowPath = (x1, y1, h1, x2, y2, h2) => {
-    const r = x1 + nodeW, l = x2;
-    const mx = (r + l) / 2;
-    return `M${r},${y1} C${mx},${y1} ${mx},${y2} ${l},${y2} L${l},${y2 + h2} C${mx},${y2 + h2} ${mx},${y1 + h1} ${r},${y1 + h1} Z`;
+  const svgH = Math.max(c0y + c0h, c1ey + eH, c2noiy + noiH, c3cfy + cfH) + PAD + 10;
+
+  const flow = (sx, sy, sh, fromH, dx, dy, dh) => {
+    const x1 = sx + nodeW, x2 = dx;
+    const y1 = sy, y2 = dy;
+    const mx = (x1 + x2) / 2;
+    return `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2} L${x2},${y2 + dh} C${mx},${y2 + dh} ${mx},${y1 + sh} ${x1},${y1 + sh} Z`;
   };
 
   const nodes = [
-    { x: colX[0], y: c0y, h: c0h, label: "満室賃料", value: income, color: "#3b82f6", textColor: "#fff" },
-    { x: colX[1], y: c1_vacancy_y, h: c1_vacancy_h, label: "空室ロス", value: vacancyLoss, color: "#ef4444", textColor: "#fff" },
-    { x: colX[1], y: c1_effective_y, h: c1_effective_h, label: "有効収入", value: effectiveIncome, color: "#10b981", textColor: "#fff" },
-    { x: colX[2], y: c2_exp_y, h: c2_exp_h, label: "運営経費", value: totalExp, color: "#f59e0b", textColor: "#fff" },
-    { x: colX[2], y: c2_noi_y, h: c2_noi_h, label: "営業純利益(NOI)", value: Math.max(noi, 0), color: "#059669", textColor: "#fff" },
-    { x: colX[3], y: c3_loan_y, h: c3_loan_h, label: "ローン返済", value: loanPayment, color: "#d97706", textColor: "#fff" },
-    { x: colX[3], y: c3_cf_y, h: c3_cf_h, label: "手残り(CF)", value: netCF, color: netCF >= 0 ? "#047857" : "#dc2626", textColor: "#fff" },
+    { x: cols[0], y: c0y, h: c0h, label: "満室賃料", val: income, bg: "#3b82f6" },
+    { x: cols[1], y: c1vy, h: vH, label: "空室ロス", val: vacancyLoss, bg: "#ef4444" },
+    { x: cols[1], y: c1ey, h: eH, label: "有効収入", val: effectiveIncome, bg: "#10b981" },
+    { x: cols[2], y: c2oxy, h: oxH, label: "運営経費", val: opex, bg: "#f59e0b" },
+    { x: cols[2], y: c2noiy, h: noiH, label: "営業純利益(NOI)", val: Math.max(noi, 0), bg: "#059669" },
+    { x: cols[3], y: c3lny, h: lnH, label: "ローン返済", val: loanPayment, bg: "#d97706" },
+    { x: cols[3], y: c3cfy, h: cfH, label: "手残り(CF)", val: netCF, bg: netCF >= 0 ? "#047857" : "#dc2626" },
   ];
+
+  const vacSrc = { y: c0y, h: vH };
+  const effSrc = { y: c0y + vH, h: c0h - vH };
+  const opxSrc = { y: c1ey, h: Math.min(oxH, eH) };
+  const noiSrc = { y: c1ey + Math.min(oxH, eH), h: eH - Math.min(oxH, eH) };
+  const lnSrc = { y: c2noiy, h: Math.min(lnH, noiH) };
+  const cfSrc = { y: c2noiy + Math.min(lnH, noiH), h: Math.max(noiH - Math.min(lnH, noiH), 2) };
 
   const flows = [
-    { x1: colX[0], y1: c0y, h1: barH(vacancyLoss), x2: colX[1], y2: c1_vacancy_y, h2: c1_vacancy_h, color: "rgba(239,68,68,0.2)" },
-    { x1: colX[0], y1: c0y + barH(vacancyLoss), h1: c0h - barH(vacancyLoss), x2: colX[1], y2: c1_effective_y, h2: c1_effective_h, color: "rgba(16,185,129,0.2)" },
-    { x1: colX[1], y1: c1_effective_y, h1: barH(totalExp), x2: colX[2], y2: c2_exp_y, h2: c2_exp_h, color: "rgba(245,158,11,0.2)" },
-    { x1: colX[1], y1: c1_effective_y + barH(totalExp), h1: c1_effective_h - barH(totalExp), x2: colX[2], y2: c2_noi_y, h2: c2_noi_h, color: "rgba(5,150,105,0.2)" },
-    { x1: colX[2], y1: c2_noi_y, h1: barH(loanPayment), x2: colX[3], y2: c3_loan_y, h2: c3_loan_h, color: "rgba(217,119,6,0.2)" },
-    { x1: colX[2], y1: c2_noi_y + barH(loanPayment), h1: Math.max(c2_noi_h - barH(loanPayment), 2), x2: colX[3], y2: c3_cf_y, h2: c3_cf_h, color: netCF >= 0 ? "rgba(4,120,87,0.25)" : "rgba(220,38,38,0.2)" },
+    { sx: cols[0], sy: vacSrc.y, sh: vacSrc.h, dx: cols[1], dy: c1vy, dh: vH, color: "rgba(239,68,68,0.18)" },
+    { sx: cols[0], sy: effSrc.y, sh: effSrc.h, dx: cols[1], dy: c1ey, dh: eH, color: "rgba(16,185,129,0.18)" },
+    { sx: cols[1], sy: opxSrc.y, sh: opxSrc.h, dx: cols[2], dy: c2oxy, dh: oxH, color: "rgba(245,158,11,0.18)" },
+    { sx: cols[1], sy: noiSrc.y, sh: noiSrc.h, dx: cols[2], dy: c2noiy, dh: noiH, color: "rgba(5,150,105,0.18)" },
+    { sx: cols[2], sy: lnSrc.y, sh: lnSrc.h, dx: cols[3], dy: c3lny, dh: lnH, color: "rgba(217,119,6,0.18)" },
+    { sx: cols[2], sy: cfSrc.y, sh: cfSrc.h, dx: cols[3], dy: c3cfy, dh: cfH, color: netCF >= 0 ? "rgba(4,120,87,0.2)" : "rgba(220,38,38,0.18)" },
   ];
 
-  const svgH = Math.max(...nodes.map(n => n.y + n.h)) + 40;
-
   return (
-    <svg viewBox={`0 0 ${W} ${svgH}`} style={{ width: "100%", height: "auto", fontFamily: "-apple-system, sans-serif" }}>
-      {flows.filter(f => f.h1 > 0 && f.h2 > 0).map((f, i) => (
-        <path key={i} d={flowPath(f.x1, f.y1, f.h1, f.x2, f.y2, f.h2)} fill={f.color} />
+    <svg viewBox={`0 0 ${W} ${svgH}`} style={{ width: "100%", height: "auto", fontFamily: "-apple-system, sans-serif", display: "block" }}>
+      {flows.map((f, i) => (
+        <path key={i} d={flow(f.sx, f.sy, f.sh, 0, f.dx, f.dy, f.dh)} fill={f.color} />
       ))}
-      {nodes.filter(n => n.h > 0).map((n, i) => (
-        <g key={i}>
-          <rect x={n.x} y={n.y} width={nodeW} height={n.h} rx={4} fill={n.color} opacity={0.9} />
-          <text x={n.x + nodeW / 2} y={n.y + Math.min(n.h / 2 - 6, n.h - 22)} textAnchor="middle" fontSize={11} fontWeight={700} fill={n.textColor} dominantBaseline="central">
-            {n.label}
-          </text>
-          <text x={n.x + nodeW / 2} y={n.y + Math.min(n.h / 2 + 10, n.h - 6)} textAnchor="middle" fontSize={12} fontWeight={800} fill={n.textColor} dominantBaseline="central">
-            {n.value < 0 ? "▲" : ""}{fmtM(Math.abs(n.value))}
-          </text>
-        </g>
-      ))}
+      {nodes.filter(n => n.val !== 0 || n.label === "手残り(CF)").map((n, i) => {
+        const showTwoLine = n.h >= 34;
+        return (
+          <g key={i}>
+            <rect x={n.x} y={n.y} width={nodeW} height={n.h} rx={5} fill={n.bg} />
+            {showTwoLine ? (
+              <>
+                <text x={n.x + nodeW / 2} y={n.y + n.h / 2 - 8} textAnchor="middle" dominantBaseline="central" fontSize={10} fontWeight={700} fill="#fff">{n.label}</text>
+                <text x={n.x + nodeW / 2} y={n.y + n.h / 2 + 10} textAnchor="middle" dominantBaseline="central" fontSize={13} fontWeight={800} fill="#fff">{n.val < 0 ? "▲" : ""}{fmtM(Math.abs(n.val))}</text>
+              </>
+            ) : (
+              <text x={n.x + nodeW / 2} y={n.y + n.h / 2} textAnchor="middle" dominantBaseline="central" fontSize={9} fontWeight={700} fill="#fff">{n.label} {fmtM(Math.abs(n.val))}</text>
+            )}
+          </g>
+        );
+      })}
     </svg>
   );
 }
@@ -137,15 +149,15 @@ export default function App() {
     const mTax = Math.round(effectiveRent * (taxRate / 100));
     const mInsurance = Math.round(effectiveRent * (insurance / 100));
     const mOther = Math.round(effectiveRent * (otherExp / 100));
-    const totalExpMonthly = monthlyLoan + mManage + mRepair + mTax + mInsurance + mOther;
     const opex = mManage + mRepair + mTax + mInsurance + mOther;
     const noi = effectiveRent - opex;
     const netCF = noi - monthlyLoan;
+    const totalExpMonthly = monthlyLoan + opex;
     const annualCF = netCF * 12;
     const netYield = price > 0 ? (annualCF / price) * 100 : 0;
     const ccr = equity > 0 ? (annualCF / equity) * 100 : 0;
     const dscr = monthlyLoan > 0 ? effectiveRent / monthlyLoan : Infinity;
-    const bep = ((totalExpMonthly) / rent) * 100;
+    const bep = rent > 0 ? (totalExpMonthly / rent) * 100 : 0;
     const cfProjection = [];
     let cumCF = 0;
     for (let y = 1; y <= 10; y++) {
@@ -218,7 +230,7 @@ export default function App() {
               <div style={{ fontSize: 13, fontWeight: 700, color: "#111", marginBottom: 6 }}>収支フロー構造</div>
               <SankeyDiagram data={sankeyData} />
               <div style={{ marginTop: 8, padding: 8, background: "#f9fafb", borderRadius: 8, fontSize: 10, color: "#555", lineHeight: 1.6 }}>
-                <strong>融資:</strong> 借入 {fmtM(calc.loanAmount)} / 自己資金 {fmtM(calc.equity)} / 月額返済 {fmtM(calc.monthlyLoan)}
+                <strong>融資:</strong> 借入 {fmtM(calc.loanAmount)} / 自己資金 {fmtM(calc.equity)} / 月額返済 {fmtM(calc.monthlyLoan)} ・ <strong>経費内訳:</strong> 管理費{fmtM(calc.mManage)} 修繕{fmtM(calc.mRepair)} 税{fmtM(calc.mTax)} 保険{fmtM(calc.mInsurance)} 他{fmtM(calc.mOther)}
               </div>
             </div>
           )}
